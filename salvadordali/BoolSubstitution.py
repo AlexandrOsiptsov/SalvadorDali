@@ -178,18 +178,3 @@ class BoolSubstitution:
                     max_b = j
 
         return max_a, max_b, max_elem
-
-    
-    
-
-    
-
-            
-        
-
-        
-
-
-
-    
-

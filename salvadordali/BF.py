@@ -179,4 +179,4 @@ class BF:
         max_ind = lap.index(max_val)
 
         return max_ind, max_val
-
+    

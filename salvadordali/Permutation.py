@@ -105,7 +105,3 @@ class Permutation:
             p_list.append(Permutation.cycle_permut(n, i, i - q))
 
         return p_list
-    
-    
-        
-        

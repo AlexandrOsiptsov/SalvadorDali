@@ -9,7 +9,7 @@ from salvadordali import GF, BF, Permutation, Vector, BoolSubstitution
 
 
 
-int_list = [8, 1, 15, 9, 13, 6, 7, 12, 0, 14, 5, 4, 10, 11, 2, 3]
+int_list = [13, 3, 2, 10, 7, 15, 1, 0, 6, 8, 11, 5, 14, 4, 12, 9]
 # random.shuffle(int_list) # получаем случайное биективное отображение
 S = BoolSubstitution.from_int_list(int_list)
 
