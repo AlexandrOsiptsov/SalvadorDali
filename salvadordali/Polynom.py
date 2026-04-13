@@ -1,7 +1,7 @@
 import copy
 import math
 from functools import reduce
-from typing import Tuple, List
+from typing import Tuple, List, Union
 
 from .GF import GF
 from .Vector import Vector
@@ -22,18 +22,23 @@ class Polynom:
         self.id = id_elem
 
 
-    def is_same_field(self, other) -> bool:
-        if not isinstance(other, Polynom):
-            raise TypeError("Invalid type in field comparison")
+    def is_same_field(self, other: Union['Polynom', GF]) -> bool:
+        if isinstance(other, Polynom):
+            if type(self.lst[0]) != type(other.lst[0]):
+                return False
+            if self.zero != other.zero or self.id != other.id:
+                return False
+            return True
 
-        if not isinstance(self.lst[0], other.lst[0]):
-            return False
-        
-        if self.zero != other.zero or self.id != other.id:
-            return False
-        
-        return True
+        if isinstance(other, GF):
+            return other.is_same_field(self.zero) and other.is_same_field(self.id)
 
+        raise TypeError("Invalid type in field comparison")
+
+
+    def inc_dim(self, k=1) -> "Polynom":
+        return Polynom([self.zero for i in range(k)] + self.lst, self.zero, self.id)
+        
 
     def __str__(self) -> str:
         if self.is_null():
@@ -66,38 +71,48 @@ class Polynom:
             res = res[:-1]
         return res
 
+    def __repr__(self) -> str:
+        return str(self)
+
 
     def __neg__(self) -> "Polynom":
         return Polynom([-i for i in self.lst], self.zero, self.id)
 
 
-    def __add__(self, other: "Polynom") -> "Polynom":
+    def __add__(self, other: Union['Polynom', GF]) -> "Polynom":
         if not self.is_same_field(other):
             raise ValueError('Invalid polynomials add')
 
-        zero_arr = [self.zero for i in range(abs(len(self.lst) - len(other.lst)))]
+        if isinstance(other, Polynom):
+            zero_arr = [self.zero for i in range(abs(len(self.lst) - len(other.lst)))]
 
-        if len(self.lst) > len(other.lst):
-            zip_arr = zip(self.lst, other.lst + zero_arr)
-        else:
-            zip_arr = zip(self.lst + zero_arr, other.lst)
+            if len(self.lst) > len(other.lst):
+                zip_arr = zip(self.lst, other.lst + zero_arr)
+            else:
+                zip_arr = zip(self.lst + zero_arr, other.lst)
 
-        return Polynom([a + b for a, b in zip_arr], self.zero, self.id)
+            return Polynom([a + b for a, b in zip_arr], self.zero, self.id)
+
+        if isinstance(other, GF):
+            return Polynom([self.lst[0] + other] + self.lst[1:], self.zero, self.id)
 
 
-    def __sub__(self, other: "Polynom") -> "Polynom":
+    def __sub__(self, other: Union['Polynom', GF]) -> "Polynom":
         if not self.is_same_field(other):
             raise ValueError('Invalid polynomials sub')
         
         return self + -other
 
 
-    def __mul__(self, other: "Polynom") -> "Polynom":
+    def __mul__(self, other: Union['Polynom', GF]) -> "Polynom":
         if isinstance(other, Polynom):
             return sum([(self * i).inc_dim(ind) for ind, i in enumerate(other.lst)],
                        Polynom([self.zero], self.zero, self.id))
         else:
             return Polynom([i * other for i in self.lst], self.zero, self.id)
+
+    def __rmul__(self, other) -> "Polynom":
+        return Polynom([i * other for i in self.lst], self.zero, self.id)
 
 
     def __truediv__(self, other: "Polynom") -> Tuple["Polynom", "Polynom"]:
@@ -177,10 +192,6 @@ class Polynom:
 
     def compact(self) -> "Polynom":
         return Polynom([self.lst[i] for i in range(self.deg() + 1)], self.zero, self.id)
-
-
-    def inc_dim(self, k=1) -> "Polynom":
-        return Polynom([self.zero for i in range(k)] + self.lst, self.zero, self.id)
 
 
     def is_null(self) -> bool:

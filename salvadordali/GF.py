@@ -28,27 +28,50 @@ class GF:
 
         return i
 
-    def is_same_field(self, other: "GF") -> bool:
-        return isinstance(other, GF) and self.pow == other.pow
+    def is_same_field(self, other) -> bool:
+        if isinstance(other, GF): return self.pow == other.pow
+        return True
 
     def __str__(self) -> str:
         return str(self.val)
 
+    def __repr__(self) -> str:
+        return str(self)
+
     def __neg__(self) -> "GF":
         return GF(self.pow, (self.pow - self.val) % self.pow)
+    
+    
 
-    def __add__(self, other: "GF") -> "GF":
+    def __add__(self, other) -> "GF":
+        if isinstance(other, int):
+            other = GF(self.pow, other % self.pow)
         if not self.is_same_field(other):
             raise ValueError('Invalid fields in elems add')
         
-        return GF(self.pow, (self.val + other.val) % self.pow)
+        if isinstance(other, GF):
+            return GF(self.pow, (self.val + other.val) % self.pow)
 
-    def __sub__(self, other: "GF") -> "GF":
+        return other.__add__(self)
+
+    def __radd__(self, other) -> "GF":
+        # support int + GF
+        return self.__add__(other)
+
+    def __sub__(self, other) -> "GF":
+        if isinstance(other, int):
+            other = GF(self.pow, other % self.pow)
         if not self.is_same_field(other):
             raise ValueError('Invalid fields in elems sub')
         
         return self + -other
 
+    def __rsub__(self, other) -> "GF":
+        # support int - GF
+        if isinstance(other, int):
+            return GF(self.pow, other % self.pow) - self
+        raise ValueError('Invalid type for rsub')
+    
     def __invert__(self) -> "GF":
         r1, r2 = self.val, self.pow
         x1, x2 = 1, 0
@@ -60,15 +83,24 @@ class GF:
 
         return GF(self.pow, (self.pow + x1) % self.pow)
 
-    def __mul__(self, other: "GF") -> "GF":
+    def __mul__(self, other) -> "GF":
+        if isinstance(other, int):
+            other = GF(self.pow, other % self.pow)
         if not self.is_same_field(other):
             raise ValueError('Invalid fields in elems mul')
         
         return GF(self.pow, (self.val * other.val) % self.pow)
 
-    def __truediv__(self, other: "GF") -> "GF":
+    def __rmul__(self, other) -> "GF":
+        # support int * GF
+        return self.__mul__(other)
+
+    def __truediv__(self, other) -> "GF":
+        if isinstance(other, int):
+            other = GF(self.pow, other % self.pow)
         if not self.is_same_field(other):
             raise ValueError('Invalid fields in elems div')
+ 
         
         return self * ~other
 
@@ -78,14 +110,14 @@ class GF:
         
         return reduce(lambda a, b: a * b, [self for i in range(power)])
 
-    def __gt__(self, other: "GF") -> bool:
-        if self.is_same_field(other):
+    def __gt__(self, other) -> bool:
+        if isinstance(other, GF) and self.is_same_field(other):
             return self.val > other.val
         
         return self.val > other
 
     def __lt__(self, other: "GF") -> bool:
-        if self.is_same_field(other):
+        if isinstance(other, GF) and self.is_same_field(other):
             return self.val < other.val
         
         return self.val < other
@@ -94,7 +126,7 @@ class GF:
         return self > other or self == other
 
     def __eq__(self, other: "GF") -> bool:
-        if self.is_same_field(other):
+        if isinstance(other, GF) and self.is_same_field(other):
             return self.val == other.val
         return self.val == other
 
